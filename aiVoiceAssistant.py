@@ -29,7 +29,7 @@ import wmi
 DEFAULT_COUNTRY_CODE = "+91"
 import pyperclip
 # # import openai
-# openai.api_key = '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'
+# openai.api_key = 'Enter api key here '
 
 # Initialize text-to-speech engine
 engine = pyttsx3.init('sapi5')
