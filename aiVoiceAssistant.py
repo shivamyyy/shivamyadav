@@ -16,14 +16,20 @@ import speedtest
 from ctypes import cast, POINTER
 from comtypes import CLSCTX_ALL
 from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
+import screen_brightness_control as sbc
 import pyautogui
+import pyjokes
+import shutil
+import json
+import smtplib
+import wolframalpha
+from urllib.request import urlopen
 import time
+import wmi
+DEFAULT_COUNTRY_CODE = "+91"
 import pyperclip
-import tkinter as tk
-from tkinter import scrolledtext
-from threading import Thread
-import openai
-openai.api_key = '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'
+# # import openai
+# openai.api_key = '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'
 
 # Initialize text-to-speech engine
 engine = pyttsx3.init('sapi5')
@@ -35,6 +41,11 @@ engine.setProperty('rate', 150)
 def speak(audio):
     engine.say(audio)
     engine.runAndWait()
+
+
+     
+ 
+
 
 # Function to take user command
 def takeCommand():
@@ -52,31 +63,32 @@ def takeCommand():
             return "None"
         return query.lower()
     
-# Function to interact with ChatGPT API
-def chatGPT(message):
-    response = openai.Completion.create(
-        engine="text-davinci-003",
-        prompt=message,
-        max_tokens=150
-    )
-    return response.choices[0].text.strip()
+# # Function to interact with ChatGPT API
+# def chatGPT(message):
+#     response = openai.Completion.create(
+#     engine="gpt-3.5-turbo-instruct",  # Use a supported model like text-davinci-003
+#     prompt=message,
+#     max_tokens=150
+# )
 
-# Function to chat with ChatGPT
-def chatWithGPT():
-    speak("How can I assist you today?")
-    while True:
-        user_input = takeCommand()
-        if 'exit' in user_input:
-            speak("Goodbye! Have a great day.")
-            break
+#     return response.choices[0].text.strip()
 
-        # Send user input to ChatGPT
-        response = chatGPT(user_input)
+# # Function to chat with ChatGPT
+# def chatWithGPT():
+#     speak("How can I assist you today?")
+#     while True:
+#         user_input = takeCommand()
+#         if 'switch' in user_input:
+#             speak("switching to normal mode")
+#             break
 
-        # Speak the response from ChatGPT
-        speak(response)
-        # Display the response in text format
-        print("Assistant:", response)
+#         # Send user input to ChatGPT
+#         response = chatGPT(user_input)
+
+#         # Speak the response from ChatGPT
+#         speak(response)
+#         # Display the response in text format
+#         print("Assistant:", response)
 
 # Function to open YouTube
 def openYouTube():
@@ -112,6 +124,7 @@ def createShapes():
 # Function to open Gmail and create an email
 def createEmail():
     webbrowser.open("https://mail.google.com")
+    
 
 # Function to open Notepad and write a message
 def writeNotepadMessage(message):
@@ -192,15 +205,7 @@ def takeScreenshot():
     img.save(f"{name}.png")
     speak("Screenshot saved.")
 
-# Function to translate English sentences to Hindi
-def translateToHindi():
-    speak("What do you want to translate to Hindi?")
-    sentence_to_translate = takeCommand()
-    
-    translator = Translator(to_lang="hi")
-    translation = translator.translate(sentence_to_translate)
-    
-    speak(f"The translation to Hindi is: {translation}")
+
 
 
 # Function to play Rock, Paper, Scissors with Jarvis
@@ -237,72 +242,30 @@ def checkInternetSpeed():
     
     speak(f"My current download speed is {download_speed:.2f} Mbps, and upload speed is {upload_speed:.2f} Mbps.")
 
-# Function to shut down the system
-def shutDownSystem():
-    speak("Are you sure you want to shut down the system?")
-    confirmation = takeCommand().lower()
-    
-    if 'yes' in confirmation:
-        os.system("shutdown /s /t 1")
-    else:
-        speak("Shutting down cancelled.")
 # Function to open WhatsApp and send a message
-
-
 # Function to open WhatsApp and send a message
 def openWhatsAppAndSendMessage():
-    speak("Whom do you want to send a message to on WhatsApp? Please include the country code.")
-    contact_name = takeCommand()
+    speak("Whom do you want to send a message to?")
+    recipient_number = takeCommand()
+    recipient_number = takeCommand()
 
-    # Open WhatsApp Web in the default web browser
-    webbrowser.open("https://web.whatsapp.com/")
+    # If country code is not included, prepend the default
+    if not recipient_number.startswith("+"):
+        recipient_number = DEFAULT_COUNTRY_CODE + recipient_number
 
-    # Wait for the user to scan the QR code
-    speak("Please scan the QR code on your screen.")
+    print("Recipient Number:", recipient_number) 
 
-    # Wait for the user to confirm after scanning
-    while True:
-        response = takeCommand().lower()
-        if 'yes' in response:
-            break
-        else:
-            speak("Please say 'yes' when you have scanned the QR code.")
-
-    # Ask for the message to be sent
     speak("What message do you want to send?")
     message = takeCommand()
 
-    # Use pyperclip to copy the message to the clipboard
-    pyperclip.copy(message)
-
-    # Type the contact name
-    time.sleep(2)  # Add a delay for WhatsApp to fully load
-    pyautogui.click(x=200, y=200)  # Click on the chat box
-
-    # Type the contact name (you may need to adjust the coordinates based on your screen)
-    pyautogui.write(contact_name)
-    time.sleep(1)
-    pyautogui.press('enter')
-
-    # Simulate Ctrl + V (paste) to input the message
-    time.sleep(1)
-    pyautogui.hotkey('ctrl', 'v')
-    time.sleep(1)
-    pyautogui.press('enter')
-
-    speak("Message sent.")
+    # Use pywhatkit to send the message
+    kit.sendwhatmsg_instantly(recipient_number, message, wait_time=10)  # Adjust wait_time if needed
+    speak("Message sent to " + recipient_number + " on WhatsApp.")
 
 
-# Function for a simple calculator
-def simpleCalculator():
-    speak("Please provide a mathematical expression.")
-    expression = takeCommand()
 
-    try:
-        result = eval(expression)
-        speak(f"The result is {result}.")
-    except Exception as e:
-        speak("Sorry, I couldn't evaluate the expression.")
+
+
 # Function to set an alarm
 def setAlarm():
     speak("What time would you like to set the alarm for? Please provide the time in 24-hour format.")
@@ -318,19 +281,15 @@ def setAlarm():
         speak("Time to wake up!")
     except Exception as e:
         speak("Invalid time format. Please provide the time in 24-hour format.")
-# Function to tell a joke
-def tellJoke():
-    # You can use a joke API or provide predefined jokes
-    speak("Why did the programmer go broke? Because he used up all his cache.")
-# Function to adjust device volume
-# Function to adjust device volume
-def adjustVolume():
-    speak("Do you want to increase or decrease the volume?")
-    command = takeCommand().lower()
 
+# Function to adjust device volume
+
+# Function to adjust device volume
+def adjustVolume(command):
+    # Get the default audio playback device
     devices = AudioUtilities.GetSpeakers()
     interface = devices.Activate(
-        IAudioEndpointVolume._iid_, CLSCTX_ALL, None)
+        IAudioEndpointVolume._iid_, CLSCTX_ALL, None)  # Use _iid_ instead of iid
     volume = cast(interface, POINTER(IAudioEndpointVolume))
 
     if 'increase' in command or 'up' in command:
@@ -346,67 +305,106 @@ def adjustVolume():
     else:
         speak("Invalid command. Please specify 'increase' or 'decrease'.")
 
-class VoiceAssistantGUI:
-    def __init__(self, master):
-        self.master = master
-        master.title("Voice Assistant")
+# Function to toggle Wi-Fi
 
-        self.text_area = scrolledtext.ScrolledText(master, wrap=tk.WORD, width=40, height=10)
-        self.text_area.pack(pady=10)
 
-        self.start_button = tk.Button(master, text="Start Voice Assistant", command=self.start_assistant)
-        self.start_button.pack()
+# Function to open File Explorer
+def openFileExplorer():
+    os.startfile('explorer.exe')
 
-        self.stop_button = tk.Button(master, text="Stop Voice Assistant", command=self.stop_assistant, state=tk.DISABLED)
-        self.stop_button.pack()
+def increaseBrightness():
+    current_brightness = sbc.get_brightness()[0]  # Extract the brightness value
+    new_brightness = min(100, current_brightness + 10)  # Increase by 10%
+    sbc.set_brightness(new_brightness)
+    speak("Brightness increased.")
 
-        self.exit_button = tk.Button(master, text="Exit", command=master.destroy)
-        self.exit_button.pack()
+def decreaseBrightness():
+    current_brightness = sbc.get_brightness()[0]  # Extract the brightness value
+    new_brightness = max(0, current_brightness - 10)  # Decrease by 10%
+    sbc.set_brightness(new_brightness)
+    speak("Brightness decreased.")
 
-        self.running = False
-        self.assistant_thread = None
 
-    def start_assistant(self):
-        if not self.running:
-            self.running = True
-            self.start_button.config(state=tk.DISABLED)
-            self.stop_button.config(state=tk.NORMAL)
-            self.assistant_thread = Thread(target=self.run_assistant)
-            self.assistant_thread.start()
+# Function to shut down the system
+def shutDownSystem():
+    speak("Are you sure you want to shut down the system?")
+    confirmation = takeCommand().lower()
 
-    def stop_assistant(self):
-        if self.running:
-            self.running = False
-            self.stop_button.config(state=tk.DISABLED)
-            self.start_button.config(state=tk.NORMAL)
-            self.assistant_thread.join()
+    if 'yes' in confirmation:
+        os.system("shutdown /s /t 1")
+    else:
+        speak("Shutting down cancelled.")
 
-    def run_assistant(self):
-        while self.running:
-            query = takeCommand()
-            # Process user query and execute assistant functions
-            if 'exit' in query:
-                speak("Goodbye! Have a great day.")
-                self.stop_assistant()
-            else:
-                response = chatGPT(query)
-                speak(response)
-                self.text_area.insert(tk.END, f"User: {query}\nAssistant: {response}\n\n")
-                self.text_area.see(tk.END)  # Auto-scroll to the bottom
+# Function to restart the system
+def restartSystem():
+    speak("Are you sure you want to restart the system?")
+    confirmation = takeCommand().lower()
+
+    if 'yes' in confirmation:
+        os.system("shutdown /r /t 1")
+    else:
+        speak("Restarting cancelled.")
+
+# Function to search on the web
+def searchWeb(query):
+    query = query.replace("search", "").replace("play", "").strip()
+    if query:
+        webbrowser.open(query)
+    else:
+        speak("Please provide a valid search query.")
+
+def sendEmail():
+    try:
+        speak("To whom do you want to send the email?")
+        to = input("Recipient's Email: ").strip()
+
+        speak("What should be the subject of the email?")
+        subject = input("Subject: ")
+
+        speak("What message would you like to send?")
+        content = input("Message: ")
+
+        # Open Gmail in the default web browser
+        webbrowser.open("https://mail.google.com")
+
+        # Wait for Gmail to open
+        time.sleep(5)
+
+        # Compose the email by simulating key presses
+        pyautogui.hotkey('c')  # 'c' for compose
+        time.sleep(2)
+
+        pyautogui.write(to)
+        pyautogui.press('tab')  # Move to the subject field
+        time.sleep(1)
+        pyautogui.write(subject)
+        pyautogui.press('tab')  # Move to the message body
+        time.sleep(1)
+        pyautogui.write(content)
+
+        # Send the email
+        pyautogui.hotkey('ctrl', 'enter')
+
+        speak("Email has been sent!")
+    except Exception as e:
+        print(e)
+        speak("I am not able to send this email")
+
+
+
+
+
+
 
 
 # Main execution loop
 if __name__ == "__main__":
-    root = tk.Tk()
-    gui = VoiceAssistantGUI(root)
-    root.mainloop()
-    chatWithGPT()
+    # chatWithGPT()
     speak("Hello! How can I assist you today?")
 
     while True:
         query = takeCommand()
 
-        
         if 'open youtube' in query:
             openYouTube()
         elif 'search on youtube' in query:
@@ -429,8 +427,6 @@ if __name__ == "__main__":
             speak("What message would you like to type in WordPad?")
             wordpad_message = takeCommand()
             typeWordpadMessage(wordpad_message)
-        elif 'tell temperature' in query:
-            tellTemperature()
         elif 'tell date' in query:
             tellDate()
         elif 'tell time' in query:
@@ -447,26 +443,85 @@ if __name__ == "__main__":
             openCameraAndTakePicture()
         elif 'take screenshot' in query:
             takeScreenshot()
-        elif 'translate to hindi' in query:
-            translateToHindi()
+    
         elif 'play rock paper scissors' in query:
             playRockPaperScissors()
         elif 'check internet speed' in query:
             checkInternetSpeed()
-        elif 'shut down system' in query:
-            shutDownSystem()
         elif 'open whatsapp and send message' in query:
             openWhatsAppAndSendMessage()
-        elif 'simple calculator' in query:
-            simpleCalculator()
-        elif 'volume up' in query:
-            adjustVolume('up')
-        elif 'volume down' in query:
-            adjustVolume('down')
+
+        elif 'news' in query:
+             
+            try: 
+                jsonObj = urlopen('''https://newsapi.org / v1 / articles?source = the-times-of-india&sortBy = top&apiKey =\\times of India Api key\\''')
+                data = json.load(jsonObj)
+                i = 1
+                 
+                speak('here are some top news from the times of india')
+                print('''=============== TIMES OF INDIA ============'''+ '\n')
+                 
+                for item in data['articles']:
+                     
+                    print(str(i) + '. ' + item['title'] + '\n')
+                    print(item['description'] + '\n')
+                    speak(str(i) + '. ' + item['title'] + '\n')
+                    i += 1
+            except Exception as e:
+                 
+                print(str(e))
+
+        elif 'wikipedia' in query:
+            speak('Searching Wikipedia...')
+            query = query.replace("wikipedia", "")
+            results = wikipedia.summary(query, sentences = 3)
+            speak("According to Wikipedia")
+            print(results)
+            speak(results)
+        
+        elif 'search' in query or 'play' in query:
+            query = query.replace("search", "").replace("play", "").strip()
+            searchWeb(query)
+
+        elif 'send a email' in query:
+            sendEmail()
+
+        elif 'joke' in query:
+            speak(pyjokes.get_joke())
+
+        
+        elif "where is" in query:
+                    location = query.replace("where is", "").strip()
+                    speak(f"Locating {location}")
+                    webbrowser.open(f"https://www.google.com/maps/place/{location}")
+
+
+
+        elif 'shut down' in query:
+            shutDownSystem()
+
+        elif 'restart' in query:
+            restartSystem()
+        elif 'open file explorer' in query:
+            openFileExplorer()
+        elif 'increase brightness' in query:
+            increaseBrightness()
+        elif 'decrease brightness' in query:
+            decreaseBrightness()
+        elif 'set brightness to' in query:
+            try:
+                new_brightness = int(query.split("to")[-1])  # Extract brightness value
+                sbc.set_brightness(new_brightness)
+                speak(f"Brightness set to {new_brightness}%.")
+            except ValueError:
+                speak("Invalid brightness value. Please specify a number between 0 and 100.")
+        elif 'volume up' in query or 'increase volume' in query:
+            adjustVolume(query)
+        elif 'volume down' in query or 'decrease volume' in query:
+            adjustVolume(query)
         elif 'set alarm' in query:
             setAlarm()
-        elif 'tell me a joke' in query:
-            tellJoke()
+
         elif 'adjust the volume' in query:
             adjustVolume()
         elif 'exit' in query:
